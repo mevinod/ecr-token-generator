@@ -68,18 +68,26 @@ jobs:
           ls -l dist/
 
       # --- Create GitHub Release with CLI binary attached ---
+      # 1️⃣ Create Release
       - name: Create GitHub Release
+        id: create_release
         uses: ncipollo/release-action@v1
         with:
           tag: v${{ steps.version.outputs.version }}
           name: Release v${{ steps.version.outputs.version }}
           body: ${{ steps.changelog.outputs.changelog }}
-          files: dist/ecr_token_cli
           generateReleaseNotes: false
-          immutableCreate: false
           makeLatest: legacy
-          omitBody: false
-          omitBodyDuringUpdate: false
+      
+      # 2️⃣ Upload CLI binary as release asset
+      - name: Upload CLI binary
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: dist/ecr_token_cli
+          asset_name: ecr_token_cli
+          asset_content_type: application/octet-stream
+
 
       # --- Optional: Push Docker image ---
       # - name: Log in to Docker Hub
