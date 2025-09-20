@@ -4,13 +4,12 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Version to release (e.g., 1.0.0). Leave empty to auto-increment patch.'
+        description: 'Release version (e.g., 1.0.0). Leave empty to auto-increment patch.'
         required: false
 
 jobs:
   release:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -39,7 +38,6 @@ jobs:
               new="$major.$minor.$patch"
             fi
             echo "version=$new" >> $GITHUB_OUTPUT
-          fi
 
       - name: Generate changelog
         id: changelog
@@ -53,19 +51,20 @@ jobs:
           cat changelog.txt
           echo "changelog=$(cat changelog.txt)" >> $GITHUB_OUTPUT
 
-      # --- Build Docker image for web app ---
+      # --- Build Docker image ---
       - name: Build web app Docker image
-        run: |
-          docker build -t myorg/ecr-web-app:${{ steps.version.outputs.version }} -f Dockerfile .
+        run: docker build -t myorg/ecr-web-app:${{ steps.version.outputs.version }} -f Dockerfile .
 
       # --- Build CLI binary ---
       - name: Install PyInstaller
         run: pip install pyinstaller
 
       - name: Build CLI binary
-        run: pyinstaller --onefile cli/ecr_token_cli.py
+        run: |
+          pyinstaller --onefile cli/ecr_token_cli.py
+          ls -l dist/
 
-      # --- Create GitHub Release ---
+      # --- Create GitHub Release with binary attached ---
       - name: Create GitHub Release
         uses: ncipollo/release-action@v1
         with:
