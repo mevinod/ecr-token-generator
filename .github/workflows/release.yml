@@ -41,6 +41,8 @@ jobs:
                   new="$major.$minor.$patch"
               fi
               echo "version=$new" >> $GITHUB_OUTPUT
+          fi
+
 
       # --- Generate changelog ---
       - name: Generate changelog
