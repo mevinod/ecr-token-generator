@@ -1,7 +1,4 @@
 import sys, os
-import pytest
-
-# Ensure app.py can be imported
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from app import app
@@ -24,7 +21,5 @@ def test_get_token_with_dummy_keys():
     })
     data = response.get_json()
 
-    # Should fail gracefully with error
     assert response.status_code in [400, 500]
     assert "error" in data
-

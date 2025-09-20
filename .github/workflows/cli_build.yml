@@ -1,0 +1,16 @@
+name: CLI Build
+on: [push, pull_request]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+      - run: pip install -r cli/requirements.txt pyinstaller
+      - run: pyinstaller --onefile cli/ecr_token_cli.py
+      - uses: actions/upload-artifact@v3
+        with:
+          name: ecr_token_cli_binary
+          path: dist/ecr_token_cli
