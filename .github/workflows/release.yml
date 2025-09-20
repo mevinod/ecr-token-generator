@@ -1,0 +1,77 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release (e.g., 1.0.0). Leave empty to auto-increment patch.'
+        required: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Set up Git
+        run: git fetch --tags
+
+      - name: Determine release version
+        id: version
+        run: |
+          if [ -n "${{ github.event.inputs.version }}" ]; then
+            echo "version=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+          else
+            latest=$(git tag --sort=-creatordate | head -n 1)
+            echo "Latest tag: $latest"
+            if [ -z "$latest" ]; then
+              new="0.1.0"
+            else
+              IFS='.' read -r major minor patch <<< "${latest#v}"
+              patch=$((patch + 1))
+              new="$major.$minor.$patch"
+            fi
+            echo "version=$new" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Generate changelog
+        id: changelog
+        run: |
+          last_tag=$(git describe --tags --abbrev=0 || echo "")
+          if [ -z "$last_tag" ]; then
+            git log --pretty=format:"%h %s" > changelog.txt
+          else
+            git log $last_tag..HEAD --pretty=format:"%h %s" > changelog.txt
+          fi
+          cat changelog.txt
+          echo "changelog=$(cat changelog.txt)" >> $GITHUB_OUTPUT
+
+      # --- Build Docker image for web app ---
+      - name: Build web app Docker image
+        run: |
+          docker build -t myorg/ecr-web-app:${{ steps.version.outputs.version }} -f Dockerfile .
+
+      # --- Build CLI binary ---
+      - name: Install PyInstaller
+        run: pip install pyinstaller
+
+      - name: Build CLI binary
+        run: pyinstaller --onefile cli/ecr_token_cli.py
+
+      # --- Create GitHub Release ---
+      - name: Create GitHub Release
+        uses: ncipollo/release-action@v1
+        with:
+          tag: v${{ steps.version.outputs.version }}
+          name: Release v${{ steps.version.outputs.version }}
+          body: ${{ steps.changelog.outputs.changelog }}
+          files: |
+            dist/ecr_token_cli
+

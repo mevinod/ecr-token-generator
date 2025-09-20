@@ -1,0 +1,7 @@
+FROM python:3.11-slim
+WORKDIR /app
+COPY cli/requirements.txt requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt pyinstaller
+COPY cli/ecr_token_cli.py .
+RUN pyinstaller --onefile ecr_token_cli.py
+ENTRYPOINT ["./dist/ecr_token_cli"]
