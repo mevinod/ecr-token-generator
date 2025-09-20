@@ -67,9 +67,11 @@ jobs:
 
       - name: Build CLI binary
         run: |
-          pyinstaller --onefile cli/ecr_token_cli.py --distpath dist
+          pip install -r cli/requirements.txt  # ensure boto3 is installed
+          rm -rf build/ dist/ ecr_token_cli.spec
+          pyinstaller --onefile cli/ecr_token_cli.py --distpath dist --hidden-import=boto3
           chmod +x dist/ecr_token_cli
-          ls -l dist/
+
 
       # --- Create GitHub Release ---
       - name: Create GitHub Release
