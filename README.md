@@ -40,7 +40,7 @@ Generate AWS ECR login tokens via **CLI** or **Web API**.
 
 ### CLI
 
-Download the binary from [GitHub releases](https://github.com/<your-repo>/releases) or build locally:
+Download the binary from [GitHub releases](https://github.com/mevinod/ecr-token-generator/releases) or build locally:
 
 ```bash
 pip install -r requirements.txt  # ensure boto3 is installed
